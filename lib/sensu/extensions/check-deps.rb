@@ -6,11 +6,11 @@ module Sensu
   module Extension
     class CheckDependencies < Filter
       def name
-        "check_dependencies"
+        "check_deps"
       end
 
       def description
-        "filter events when an event exists for a check dependency"
+        "filter events when an event exists and send to RabbitMQ event json"
       end
 
       # Make an HTTP GET request to the Sensu API, using the URI
