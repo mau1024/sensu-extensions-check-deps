@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "check deps sensu filter with extra features"
   spec.description   = "check deps sensu filter with extra features"
-  spec.homepage      = "https://github.com/sensu-extensions/sensu-extensions-template"
+  spec.homepage      = "https://github.com/mau1024/sensu-extensions-check-deps"
 
   spec.files         = Dir.glob('{bin,lib}/**/*') + %w(LICENSE README.md CHANGELOG.md)
   spec.require_paths = ["lib"]
