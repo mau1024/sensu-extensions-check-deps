@@ -4,7 +4,7 @@ require "net/http"
 
 module Sensu
   module Extension
-    class CheckDependencies < Filter
+    class CheckDeps < Filter
       def name
         "check_deps"
       end
