@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Vladimir Mevzos"]
   spec.email         = ["<vladimir@appsflyer.com>"]
 
-  spec.summary       = "check deps sensu filter with extra features"
-  spec.description   = "check deps sensu filter with extra features"
+  spec.summary       = "Filter events when event exists and push message to Rabbitmq with event json"
+  spec.description   = "Filter events when event exists and push message to Rabbitmq with event json"
   spec.homepage      = "https://github.com/mau1024/sensu-extensions-check-deps"
 
   spec.files         = Dir.glob('{bin,lib}/**/*') + %w(LICENSE README.md CHANGELOG.md)
