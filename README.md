@@ -1,0 +1,1 @@
+# sensu-extensions-check-deps
