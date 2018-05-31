@@ -87,8 +87,8 @@ module Sensu
       # @return [Boolean]
 
       def dependency_events_exist?(event)
-        if event[:check][:dependencies].is_a?(Array)
-          event[:check][:dependencies].any? do |dependency|
+        if event[:check][:dependencies][:dependency].is_a?(Array)
+          event[:check][:dependencies][:dependency].any? do |dependency|
             begin
               check_name, entity = dependency.split("/").reverse
               if entity =~ /^subscription:.*$/
@@ -114,10 +114,11 @@ module Sensu
           begin
             Timeout::timeout(10) do
               if dependency_events_exist?(event)
+                writeToSlack("event exists for check dependency")
+                writeToSlack("Event: #{event[:check][:name]} would be blocked.Some of dependencies were already triggered. Deps list: #{event[:check][:dependencies][:dependency]}")
                 ["event exists for check dependency", 1]
-                writeToSlack("Filter sensu-extensions-check-deps applied")
-                writeToSlack("Event: #{event[:check][:name]} would be blocked.Some of dependencies were already triggered. Deps list: #{event[:check][:dependencies]}")
-              else
+                      else
+                writeToSlack("no current events for check dependencies")
                 ["no current events for check dependencies", 1]
               end
             end
