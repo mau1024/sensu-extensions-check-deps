@@ -2,12 +2,12 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "sensu-extensions-check-deps"
-  spec.version       = "0.0.1"
+  spec.version       = "0.0.4"
   spec.authors       = ["Vladimir Mevzos"]
   spec.email         = ["<vladimir@appsflyer.com>"]
 
-  spec.summary       = "Filter events when event exists and push message to Rabbitmq with event json"
-  spec.description   = "Filter events when event exists and push message to Rabbitmq with event json"
+  spec.summary       = "Filter events when event exists and post message to Slack"
+  spec.description   = "Filter events when event exists and post message to Slack"
   spec.homepage      = "https://github.com/mau1024/sensu-extensions-check-deps"
 
   spec.files         = Dir.glob('{bin,lib}/**/*') + %w(LICENSE README.md CHANGELOG.md)
