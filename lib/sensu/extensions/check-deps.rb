@@ -115,7 +115,8 @@ module Sensu
             Timeout::timeout(10) do
               if dependency_events_exist?(event)
                 ["event exists for check dependency", 1]
-                writeToSlack("Event: " + event[check][name] + " will be blocked."  "Some of dependencies were already triggered. Deps list: "+ event[check][dependencies])
+                writeToSlack("Filter sensu-extensions-check-deps applied")
+                writeToSlack("Event: #{event[:check][:name]} would be blocked.Some of dependencies were already triggered. Deps list: #{event[:check][:dependencies]}")
               else
                 ["no current events for check dependencies", 1]
               end
