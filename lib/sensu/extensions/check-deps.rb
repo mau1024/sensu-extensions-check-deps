@@ -110,15 +110,18 @@ module Sensu
       def run(event, &callback)
         filter = Proc.new do
           begin
-
+            deps_list = event[:check][:dependencies][:dependency]
+            deps_list ||= "empty"
+            @logger.info("check_deps filter: Processing #{event[:check][:name]}  #{event[:action]}")
+            writeToSlack(":face_with_monocle: Processing #{event[:check][:name]}  #{event[:action]}")
             Timeout::timeout(10) do
               if dependency_events_exist?(event)
-                writeToSlack(":no_entry: event exists for check dependency")
-                writeToSlack(":no_entry: Event: #{event[:check][:name]} will be blocked Action: #{event[:action]}. Deps list: #{event[:check][:dependencies][:dependency]}")
+                    writeToSlack(":no_entry: event exists for check dependency")
+                    writeToSlack(":no_entry: Event: #{event[:check][:name]} will be blocked Action: #{event[:action]}. Deps list: #{deps_list}")
                 ["event exists for check dependency", 1]
               else
-                writeToSlack(":arrow_up: no current events for check dependencies")
-                writeToSlack(":arrow_up: Event: #{event[:check][:name]} will pass. Action: #{event[:action]}. Deps list: #{event[:check][:dependencies][:dependency]}")
+                      writeToSlack(":arrow_up: no current events for check dependencies")
+                      writeToSlack(":arrow_up: Event: #{event[:check][:name]} will pass. Action: #{event[:action]}. Deps list: #{deps_list}")
                 ["no current events for check dependencies", 1]
               end
             end
