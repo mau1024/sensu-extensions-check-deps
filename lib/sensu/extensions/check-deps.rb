@@ -15,15 +15,13 @@ module Sensu
       end
 
       # Will post Slack message to channel sensu
-      def writeToSlack(message, err=false)
-            webhookUrl = "https://hooks.slack.com/services/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"
+      def writeToSlack(message, webhook, err=false)
+            webhookUrl = "https://hooks.slack.com/services/" + webhook
             channel = "#sensu"
-            emoji = ":no_entry:"
             begin
             payload = {
                 :channel  => channel,
                 :text     => message,
-                :icon_url => emoji
             }.to_json
               cmd = "curl -X POST --data-urlencode 'payload=#{payload}' #{webhookUrl}"
               system(cmd)
@@ -31,7 +29,6 @@ module Sensu
                     puts "failed to notify slack, proceeding..."
             end
       end
-      #writeToSlack("Event was blocked: " + @event['check']['name'] + "becasuse some of dependencies was already triggered. Deps list: "+ @event['check']['dependencies'])
 
       # Make an HTTP GET request to the Sensu API, using the URI
       # path provided. Uses Sensu settings to determine how to
@@ -114,11 +111,12 @@ module Sensu
           begin
             Timeout::timeout(10) do
               if dependency_events_exist?(event)
-                writeToSlack("event exists for check dependency")
-                writeToSlack("Event: #{event[:check][:name]} would be blocked.Some of dependencies were already triggered. Deps list: #{event[:check][:dependencies][:dependency]}")
+                writeToSlack(":no_entry: event exists for check dependency")
+                writeToSlack(":no_entry: Event: #{event[:check][:name]} will be blocked Action: #{event[:action]}. Deps list: #{event[:check][:dependencies][:dependency]}")
                 ["event exists for check dependency", 1]
-                      else
-                writeToSlack("no current events for check dependencies")
+              else
+                writeToSlack(":arrow_up: no current events for check dependencies")
+                writeToSlack(":arrow_up: Event: #{event[:check][:name]} will pass. Action: #{event[:action]}. Deps list: #{event[:check][:dependencies][:dependency]}")
                 ["no current events for check dependencies", 1]
               end
             end
