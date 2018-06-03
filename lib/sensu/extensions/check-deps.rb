@@ -15,7 +15,8 @@ module Sensu
       end
 
       # Will post Slack message to channel sensu
-      def writeToSlack(message, webhook, err=false)
+      @webhook = "T02B3AJ9B/BAYDG2VHN/jOVR3fy8AG5O7Y4ftTfNzon7"
+      def writeToSlack(message, webhook=@webhook, err=false)
             webhookUrl = "https://hooks.slack.com/services/" + webhook
             channel = "#sensu"
             begin
@@ -109,6 +110,7 @@ module Sensu
       def run(event, &callback)
         filter = Proc.new do
           begin
+
             Timeout::timeout(10) do
               if dependency_events_exist?(event)
                 writeToSlack(":no_entry: event exists for check dependency")

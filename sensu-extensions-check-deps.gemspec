@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "sensu-extensions-check-deps"
-  spec.version       = "0.0.7"
+  spec.version       = "0.0.8"
   spec.authors       = ["Vladimir Mevzos"]
   spec.email         = ["<vladimir@appsflyer.com>"]
 
