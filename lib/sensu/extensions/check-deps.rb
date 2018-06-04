@@ -11,12 +11,12 @@ module Sensu
       end
 
       def description
-        "filter events when an event exists and send to RabbitMQ event json"
+        "filter events when an event exists and send slack to channel sensu"
       end
 
       # Will post Slack message to channel sensu
-      @webhook = "T02B3AJ9B/BAYDG2VHN/jOVR3fy8AG5O7Y4ftTfNzon7"
-      def writeToSlack(message, webhook=@webhook, err=false)
+      def writeToSlack(message, err=false)
+            webhook = "T02B3AJ9B/BAYDG2VHN/jOVR3fy8AG5O7Y4ftTfNzon7"
             webhookUrl = "https://hooks.slack.com/services/" + webhook
             channel = "#sensu"
             begin
@@ -59,79 +59,82 @@ module Sensu
         path = "/events/#{client_name}/#{check_name}"
         response = sensu_api_get_request(path)
         response.code.to_i == 200
-      end
-
-      # Check to see if an event exists for a subscription/check pair. This
-      # method is looking for a HTTP response code of `200`.
-      #
-      # @param subscription_name [String]
-      # @param check_name [String]
-      # @return [Boolean]
-      def subscription_event_exists?(subscription_name, check_name)
-        path = "/events"
-        response = sensu_api_get_request(path)
-        events = JSON.load(response.body)
-        !events.select { |event| event[:client][:subscriptions].include?(subscription_name) && event[:check][:name] == check_name}.empty?
-      end
-
-      # Determine if an event exists for any of the check
-      # dependencies declared in the event data, specified in array,
-      # check `dependencies`. A check dependency can be a check
-      # executed by the same Sensu client (eg. `check_app`), a
-      # client/check pair (eg.`i-424242/check_mysql`), or a
-      # subscription/check pair (eg. `subscription:mysql/check_mysql`).
-      #
-      # @param event [Hash]
-      # @return [Boolean]
-
-      def dependency_events_exist?(event)
-        if event[:check][:dependencies][:dependency].is_a?(Array)
-          event[:check][:dependencies][:dependency].any? do |dependency|
-            begin
-              check_name, entity = dependency.split("/").reverse
-              if entity =~ /^subscription:.*$/
-                subscription_name = entity.split(":")[1]
-                subscription_event_exists?(subscription_name, check_name)
-              else
-                client_name = entity
-                client_name ||= event[:client][:name]
-                client_event_exists?(client_name, check_name)
-              end
-            rescue => error
-              @logger.error("failed to query api for a check dependency event", :error => error)
-              false
             end
-          end
-        else
-          false
-        end
-      end
 
-      def run(event, &callback)
-        filter = Proc.new do
-          begin
-            deps_list = event[:check][:dependencies][:dependency]
-            deps_list ||= "empty"
-            @logger.info("check_deps filter: Processing #{event[:check][:name]}  #{event[:action]}")
-            writeToSlack(":face_with_monocle: Processing #{event[:check][:name]}  #{event[:action]}")
-            Timeout::timeout(10) do
-              if dependency_events_exist?(event)
-                    writeToSlack(":no_entry: event exists for check dependency")
-                    writeToSlack(":no_entry: Event: #{event[:check][:name]} will be blocked Action: #{event[:action]}. Deps list: #{deps_list}")
-                ["event exists for check dependency", 1]
+            # Check to see if an event exists for a subscription/check pair. This
+            # method is looking for a HTTP response code of `200`.
+            #
+            # @param subscription_name [String]
+            # @param check_name [String]
+            # @return [Boolean]
+            def subscription_event_exists?(subscription_name, check_name)
+              path = "/events"
+              response = sensu_api_get_request(path)
+              events = JSON.load(response.body)
+              !events.select { |event| event[:client][:subscriptions].include?(subscription_name) && event[:check][:name] == check_name}.empty?
+            end
+
+            # Determine if an event exists for any of the check
+            # dependencies declared in the event data, specified in array,
+            # check `dependencies`. A check dependency can be a check
+            # executed by the same Sensu client (eg. `check_app`), a
+            # client/check pair (eg.`i-424242/check_mysql`), or a
+            # subscription/check pair (eg. `subscription:mysql/check_mysql`).
+            #
+            # @param event [Hash]
+            # @return [Boolean]
+
+            def dependency_events_exist?(event)
+              dependencies_string = event[:check][:dependencies][:dependency]
+              dependencies_array = dependencies_string.split(" ")
+              dependencies_array ||= []
+              if dependencies_array.is_a?(Array)
+                dependencies_array.any? do |dependency|
+                  begin
+                    check_name, entity = dependency.split("/").reverse
+                    if entity =~ /^subscription:.*$/
+                      subscription_name = entity.split(":")[1]
+                      subscription_event_exists?(subscription_name, check_name)
+                    else
+                      client_name = entity
+                      client_name ||= event[:client][:name]
+                      client_event_exists?(client_name, check_name)
+                    end
+                  rescue => error
+                    @logger.error("failed to query api for a check dependency event", :error => error)
+                    false
+                  end
+                end
               else
-                      writeToSlack(":arrow_up: no current events for check dependencies")
-                      writeToSlack(":arrow_up: Event: #{event[:check][:name]} will pass. Action: #{event[:action]}. Deps list: #{deps_list}")
-                ["no current events for check dependencies", 1]
+                false
               end
             end
-          rescue => error
-            @logger.error("check dependencies filter error", :error => error.to_s)
-            ["check dependencies filter error: #{error}", 1]
-          end
-        end
-        EM.defer(filter, callback)
-      end
-    end
-  end
-end
+
+            def run(event, &callback)
+              filter = Proc.new do
+                begin
+                  dependencies_string = event[:check][:dependencies][:dependency]
+                  dependencies_string ||= "empty"
+                  @logger.info("check_deps filter: Processing #{event[:check][:name]}  #{event[:action]}   dependencies: #{dependencies_string} ")
+                  writeToSlack(":face_with_monocle: Processing #{event[:check][:name]}  #{event[:action]}")
+                  Timeout::timeout(10) do
+                                if dependency_events_exist?(event)
+                                      #writeToSlack(":no_entry: event exists for check dependency")
+                                      writeToSlack(":no_entry: Event: #{event[:check][:name]} will be blocked Action: #{event[:action]}. Deps list: #{dependencies_string}")
+                                  ["event exists for check dependency", 1]
+                                else
+                                        #writeToSlack(":arrow_up: no current events for check dependencies")
+                                        writeToSlack(":arrow_up: Event: #{event[:check][:name]} will pass. Action: #{event[:action]}. Deps list: #{dependencies_string}")
+                                  ["no current events for check dependencies", 1]
+                                end
+                              end
+                            rescue => error
+                              @logger.error("check dependencies filter error", :error => error.to_s)
+                              ["check dependencies filter error: #{error}", 1]
+                            end
+                          end
+                          EM.defer(filter, callback)
+                        end
+                      end
+                    end
+                  end
